@@ -33,8 +33,8 @@ Because this Lite edition removes all backend framework constraints, initializin
 
 2. Navigate directly into the project directory:
 
-Bash
-cd your-repository-name
+   ```bash
+   cd your-repository-name
 
 3. Launch the application:
 
