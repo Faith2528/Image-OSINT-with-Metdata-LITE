@@ -2,6 +2,9 @@
 
 A completely client-side, serverless visual intelligence utility designed to parse coordinate arrays, extract telemetry, and map geographic paths directly inside the web browser runtime. This application processes spatial tracking data efficiently without external server dependencies, making it fully optimized for immediate, zero-cost deployment via GitHub Pages.
 
+### Chronological Telemetry Logs
+![Telemetry Metrics](screenshots/telemetry_panel.png)
+
 ---
 
 ## Core Architecture & Engineering Highlights
