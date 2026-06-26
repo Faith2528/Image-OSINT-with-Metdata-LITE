@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT Dashboard Engine (Lite)</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Updated path to local CSS styling asset assets -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <div class="dashboard-root">
+        <aside class="control-sidebar">
+            <div class="app-header">
+                <div class="pulse-indicator"></div>
+                <h2>Tagahanap ng Putangina</h2>
+            </div>
+            
+            <p class="app-description">Upload visual assets to map geographic nodes, coordinate footprints, and extract time signatures automatically.</p>
+            
+            <div class="upload-form-wrapper">
+                <label class="drag-drop-zone">
+                    <span class="upload-glyph">⚡</span>
+                    <span id="uploadText">SELECT TARGET IMAGES</span>
+                    <input type="file" id="imageInput" accept="image/*" multiple>
+                </label>
+                <button type="button" id="analyzeBtn" class="primary-submit-btn">ANALYZE IMAGES</button>
+            </div>
+        </aside>
+
+        <main class="viewport-canvas">
+            <div id="map"></div>
+
+            <div class="floating-telemetry-panel">
+                <div class="panel-header">
+                    <span>TELEMETRY METRICS</span>
+                    <span class="secure-badge">SECURE</span>
+                </div>
+                
+                <!-- Target container for the dynamic telemetry loop -->
+                <div id="telemetryList" class="panel-content scrollable">
+                    <div class="telemetry-node standby" id="standbyNode">
+                        <div class="data-row">
+                            <span class="label">SYSTEM BASE:</span>
+                            <span class="val">READY</span>
+                        </div>
+                        <p class="standby-text">Awaiting coordinate upload stream. Visual telemetry maps will render dynamically inside this module layer.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Leaflet Mapping Platform Engine Layer Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Client-side Binary Meta Core Extractor Layer -->
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+    
+    <!-- Frontend Execution Modules -->
+    <script src="js/main.js"></script>
+</body>
+</html>
