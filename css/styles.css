@@ -1,0 +1,352 @@
+:root {
+    --bg-main: #0c0f17;
+    --bg-sidebar: #121622;
+    --bg-card: #171d2c;
+    --border-color: #222b3d;
+    --text-primary: #f8fafc;
+    --text-muted: #64748b;
+    --accent-blue: #38bdf8;
+    --accent-green: #10b981;
+    --accent-red: #f87171;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+.dashboard-root {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+/* --- Left Control Center Sidebar --- */
+.control-sidebar {
+    width: 360px;
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    z-index: 100;
+}
+
+.app-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.app-header h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    letter-spacing: -0.3px;
+}
+
+.pulse-indicator {
+    width: 8px;
+    height: 8px;
+    background-color: var(--accent-blue);
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2);
+}
+
+.app-description {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 2rem;
+}
+
+/* --- Modern Sidebar Upload Forms --- */
+.upload-form-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.drag-drop-zone {
+    border: 1px dashed var(--border-color);
+    background-color: rgba(12, 15, 23, 0.4);
+    padding: 2rem 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+.drag-drop-zone:hover {
+    border-color: var(--accent-blue);
+    background-color: rgba(56, 189, 248, 0.02);
+}
+
+.upload-glyph {
+    font-size: 1.5rem;
+    color: var(--text-muted);
+}
+
+#uploadText {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+}
+
+input[type="file"] {
+    display: none;
+}
+
+.primary-submit-btn {
+    background-color: var(--accent-blue);
+    color: #0c0f17;
+    padding: 0.85rem;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.primary-submit-btn:hover {
+    opacity: 0.9;
+}
+
+/* --- Map Canvas Platform --- */
+.viewport-canvas {
+    flex: 1;
+    position: relative;
+    height: 100vh;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* --- Floating System Logs Panel (Right Side Over Map) --- */
+.floating-telemetry-panel {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 350px;
+    max-height: calc(100vh - 80px); /* Keeps module bounded to screen heights */
+    background-color: rgba(23, 29, 44, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    z-index: 1000;
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.panel-header {
+    background-color: rgba(18, 22, 34, 0.6);
+    padding: 0.9rem 1.2rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.secure-badge {
+    font-size: 0.65rem;
+    background-color: rgba(56, 189, 248, 0.15);
+    color: var(--accent-blue);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* --- Scrollable List Integration Modifications --- */
+.panel-content.scrollable {
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Modern minimalist custom track scrollbar design */
+.panel-content.scrollable::-webkit-scrollbar {
+    width: 6px;
+}
+.panel-content.scrollable::-webkit-scrollbar-track {
+    background: transparent;
+}
+.panel-content.scrollable::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 10px;
+}
+.panel-content.scrollable::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-blue);
+}
+
+/* --- Individual Telemetry Timeline Nodes --- */
+.telemetry-item {
+    background-color: rgba(12, 15, 23, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 0.85rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s ease-in-out;
+}
+.telemetry-item:last-child {
+    margin-bottom: 0;
+}
+
+.telemetry-item.has-coordinates {
+    cursor: pointer;
+}
+.telemetry-item.has-coordinates:hover {
+    border-color: var(--accent-blue);
+    background-color: rgba(56, 189, 248, 0.02);
+    transform: translateY(-1px);
+}
+
+.item-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.6rem;
+    gap: 0.5rem;
+}
+
+.img-filename {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 170px;
+}
+
+/* --- Custom Status Badges with Green/Red Dots --- */
+.status-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 6px;
+}
+.status-badge.found {
+    color: var(--accent-green);
+    background-color: rgba(16, 185, 129, 0.08);
+}
+.status-badge.not-found {
+    color: var(--accent-red);
+    background-color: rgba(248, 113, 113, 0.08);
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.status-badge.found .status-dot { background-color: var(--accent-green); }
+.status-badge.not-found .status-dot { background-color: var(--accent-red); }
+
+/* --- Text Alignment Layout Subgrids --- */
+.item-details-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detail-line {
+    font-size: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+}
+.detail-line .lbl { color: var(--text-muted); font-weight: 500; }
+.detail-line .val { font-weight: 500; }
+
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.85rem;
+    font-size: 0.8rem;
+}
+
+.data-row .label { color: var(--text-muted); font-weight: 500; }
+.data-row .val { font-weight: 600; text-align: right; }
+
+.monospace-num {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.85rem;
+    letter-spacing: -0.2px;
+}
+
+.panel-divider {
+    border: 0;
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 0.85rem 0;
+}
+
+/* --- State Accents --- */
+.accent-green { color: var(--accent-green); }
+.accent-blue { color: var(--accent-blue); }
+.accent-red { color: var(--accent-red); }
+
+.error-msg-detail, .standby-text {
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    margin: 0.75rem 0 0 0;
+}
+
+/* --- Tactical Map Contrast Optimization --- */
+
+/* 1. Mute the brightness of the map tiles without changing the map style */
+.leaflet-tile-container {
+    filter: brightness(75%) contrast(105%) saturate(85%);
+    transition: filter 0.3s ease;
+}
+
+/* 2. Make the standard marker pins pop with a tactical neon glow */
+.leaflet-marker-icon {
+    filter: drop-shadow(0 0 6px var(--accent-blue)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    animation: marker-drop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 3. Mute the default white popup containers to match your theme */
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5) !important;
+}
+
+/* Quick entry animation for pins when they load on the timeline path */
+@keyframes marker-drop {
+    0% { transform: translateY(-20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
