@@ -4,6 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const analyzeBtn = document.getElementById('analyzeBtn');
     const telemetryList = document.getElementById('telemetryList');
 
+    const telemetryPanel = document.getElementById('telemetryPanel');
+    const telemetryToggleBtn = document.getElementById('telemetryToggleBtn');
+    const previewPanel = document.getElementById('previewPanel');
+    const previewToggleBtn = document.getElementById('previewToggleBtn');
+    const previewImage = document.getElementById('previewImage');
+    const previewPanelTitle = document.getElementById('previewPanelTitle');
+
     // --- 1. Map Canvas Groundwork Layer Setup ---
     let initialLat = 14.4290;
     let initialLon = 120.9360;
@@ -17,11 +24,29 @@ document.addEventListener('DOMContentLoaded', () => {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    // Global tracking layers to clear markers out cleanly between runs
     let markerGroup = L.featureGroup().addTo(map);
     let polylineTrack = null;
 
-    // --- 2. Input Node UI Event Observers ---
+    // Dictionary tracking map structures to bind panel rows to map marker instances
+    let markerInstancesMap = {};
+
+    // --- 2. Minimize/Maximize Action Handlers ---
+    telemetryToggleBtn.addEventListener('click', () => {
+        telemetryPanel.classList.toggle('minimized');
+    });
+
+    previewToggleBtn.addEventListener('click', () => {
+        previewPanel.classList.toggle('minimized');
+    });
+
+    function showTargetImagePreview(fileUrl, filename) {
+        previewImage.src = fileUrl;
+        previewPanelTitle.textContent = `PREVIEW: ${filename.toUpperCase()}`;
+        previewPanel.classList.remove('hidden');
+        previewPanel.classList.remove('minimized');
+    }
+
+    // --- 3. Input Node UI Event Observers ---
     if (fileInput && uploadText) {
         fileInput.addEventListener('change', (e) => {
             const count = e.target.files.length;
@@ -32,18 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 3. Core EXIF Processing Engine ---
+    // --- 4. Core EXIF Processing Engine ---
     analyzeBtn.addEventListener('click', async () => {
         const files = fileInput.files;
         if (files.length === 0) return alert("Please select target assets first.");
 
-        // Clean out existing maps data tracks
         markerGroup.clearLayers();
         if (polylineTrack) map.removeLayer(polylineTrack);
+        previewPanel.classList.add('hidden');
+        previewImage.src = "";
+        markerInstancesMap = {};
 
         const processedNodes = [];
 
-        // Wrapper to parse single file records into tracking arrays
         const parseFile = (file) => {
             return new Promise((resolve) => {
                 EXIF.getData(file, function() {
@@ -54,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     let timestamp = "N/A";
                     let status = "Not Found";
 
-                    // Handle GPS translation arrays from Degree-Minute-Second sets
                     if (allTags.GPSLatitude && allTags.GPSLongitude) {
                         lat = convertDMSToDD(allTags.GPSLatitude, allTags.GPSLatitudeRef);
                         lon = convertDMSToDD(allTags.GPSLongitude, allTags.GPSLongitudeRef);
@@ -62,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     if (allTags.DateTimeOriginal) {
-                        // Reformat EXIF colons into clean readable string formats
                         timestamp = allTags.DateTimeOriginal.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
                     }
 
@@ -70,48 +94,81 @@ document.addEventListener('DOMContentLoaded', () => {
                         name: file.name,
                         status: status,
                         timestamp: timestamp,
-                        coordinates: lat && lon ? { lat, lon } : null
+                        coordinates: lat && lon ? { lat, lon } : null,
+                        localUrl: URL.createObjectURL(file)
                     });
                 });
             });
         };
 
-        // Extract metadata items across the selected file array concurrent lines
         for (let i = 0; i < files.length; i++) {
             const result = await parseFile(files[i]);
             processedNodes.push(result);
         }
 
-        // Chronological Sorting: Reorder files by timestamp metadata values 
+        // Chronological Sequence Sort
         processedNodes.sort((a, b) => {
             if (a.timestamp === "N/A") return 1;
             if (b.timestamp === "N/A") return -1;
             return a.timestamp.localeCompare(b.timestamp);
         });
 
-        // Update the UI Panels and Leaflet Plots
         renderTelemetryDashboard(processedNodes);
     });
 
-    // --- 4. Subgrid Render Logic Engine ---
+    // --- 5. Subgrid Render Logic Engine ---
     function renderTelemetryDashboard(nodes) {
-        telemetryList.innerHTML = ''; // Wipe standby message
+        telemetryList.innerHTML = '';
         const trackingLineCoordinates = [];
-        const activeMarkers = [];
+        const coordinateGroups = {};
 
+        // 🛰️ PROXIMITY THRESHOLD MATRIX CONFIGURATION
+        // Delta values of 0.00025 coordinate degrees equals roughly ~25 meters on the ground.
+        // Any assets uploaded within this radius threshold will cluster into a unified horizontal pod.
+        const PROXIMITY_THRESHOLD = 0.00025; 
+
+        // Pass A: Build the spatial bucket dictionaries using distance detection loops
         nodes.forEach((node) => {
             const isFound = node.status === "Found" && node.coordinates;
+            
+            if (isFound) {
+                // Keep the raw, chronological path trace perfectly intact at its exact drop point
+                trackingLineCoordinates.push([node.coordinates.lat, node.coordinates.lon]);
+                
+                let matchedGroupKey = null;
+
+                // Loop through existing groups to verify if this node qualifies as "nearby"
+                Object.keys(coordinateGroups).forEach((key) => {
+                    const group = coordinateGroups[key];
+                    const latDelta = Math.abs(group.lat - node.coordinates.lat);
+                    const lonDelta = Math.abs(group.lon - node.coordinates.lon);
+
+                    if (latDelta < PROXIMITY_THRESHOLD && lonDelta < PROXIMITY_THRESHOLD) {
+                        matchedGroupKey = key;
+                    }
+                });
+
+                if (matchedGroupKey) {
+                    // Proximate match verified: append node asset to the existing chain group
+                    coordinateGroups[matchedGroupKey].assets.push(node);
+                } else {
+                    // New anchor point discovered: initialize a fresh geographic pod index
+                    const newKey = `${node.coordinates.lat.toFixed(6)},${node.coordinates.lon.toFixed(6)}`;
+                    coordinateGroups[newKey] = {
+                        lat: node.coordinates.lat,
+                        lon: node.coordinates.lon,
+                        assets: [node]
+                    };
+                }
+            }
+
+            // Generate UI entry list metrics cards on the floating sidebar container
             const latVal = isFound ? node.coordinates.lat.toFixed(6) : "N/A";
             const lonVal = isFound ? node.coordinates.lon.toFixed(6) : "N/A";
             
-            // Build the dynamic UI HTML elements block matching old layout properties
             const itemCard = document.createElement('div');
             itemCard.className = `telemetry-item ${isFound ? 'has-coordinates' : ''}`;
-            if (isFound) {
-                itemCard.dataset.lat = node.coordinates.lat;
-                itemCard.dataset.lon = node.coordinates.lon;
-            }
-
+            
             itemCard.innerHTML = `
                 <div class="item-meta-row">
                     <span class="img-filename" title="${node.name}">${node.name}</span>
@@ -127,32 +184,93 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
-            // Plot interactive pins on Map layers directly
-            if (isFound) {
-                const marker = L.marker([node.coordinates.lat, node.coordinates.lon]).addTo(markerGroup);
-                marker.bindPopup(`
-                    <div style="color: #0c0f17; font-family: sans-serif; font-size: 11px; line-height: 1.45;">
-                        <strong style="color: #0ea5e9; font-weight: 700;">[!] NODE TRACKED: ${node.name}</strong><br>
-                        <span style="color: #64748b;">TIME:</span> ${node.timestamp}<br>
-                        <span style="color: #64748b;">LAT:</span> ${latVal}<br>
-                        <span style="color: #64748b;">LON:</span> ${lonVal}
-                    </div>
-                `);
+            itemCard.addEventListener('click', () => {
+                showTargetImagePreview(node.localUrl, node.name);
+                
+                if (isFound) {
+                    // Scan keys backwards to find which group marker handles this specific node asset instance
+                    let targetKey = null;
+                    Object.keys(coordinateGroups).forEach((key) => {
+                        if (coordinateGroups[key].assets.includes(node)) {
+                            targetKey = key;
+                        }
+                    });
 
-                trackingLineCoordinates.push([node.coordinates.lat, node.coordinates.lon]);
-                activeMarkers.push(marker);
-
-                // Attach click listeners to cards so they jump direct to localized map bounds
-                itemCard.addEventListener('click', () => {
-                    map.setView([node.coordinates.lat, node.coordinates.lon], 16, { animate: true, duration: 0.75 });
-                    marker.openPopup();
-                });
-            }
+                    const sharedMarkerInstance = markerInstancesMap[targetKey];
+                    if (sharedMarkerInstance) {
+                        map.setView([node.coordinates.lat, node.coordinates.lon], 17, { animate: true, duration: 0.75 });
+                        sharedMarkerInstance.openPopup();
+                    }
+                }
+            });
 
             telemetryList.appendChild(itemCard);
         });
 
-        // Generate tracking path overlays chronologically
+        // Pass B: Render the clean, non-overlapping custom layout elements onto Leaflet
+        Object.keys(coordinateGroups).forEach((key) => {
+            const group = coordinateGroups[key];
+            const count = group.assets.length;
+            const primaryAsset = group.assets[0];
+
+            let markerHtml = '';
+
+            if (count === 1) {
+                markerHtml = `
+                    <div class="marker-intel-pod">
+                        <img src="${primaryAsset.localUrl}" class="marker-avatar-thumb" alt="Target Capture Node">
+                    </div>
+                `;
+            } else {
+                // Generate the seamless inline avatar chains for nearby items
+                const avatarChainHtml = group.assets.map(asset => 
+                    `<img src="${asset.localUrl}" class="marker-avatar-thumb" title="${asset.name}">`
+                ).join('');
+
+                markerHtml = `
+                    <div class="marker-intel-pod is-stacked">
+                        ${avatarChainHtml}
+                        <span class="marker-stack-counter">+${count}</span>
+                    </div>
+                `;
+            }
+
+            const customIcon = L.divIcon({
+                html: markerHtml,
+                className: 'custom-image-marker',
+                iconSize: null,
+                iconAnchor: [0, 0]
+            });
+
+            const marker = L.marker([group.lat, group.lon], { icon: customIcon }).addTo(markerGroup);
+
+            // Dynamically itemize popup information windows for multi-image clusters
+            let popupContent = `<div style="color: #0c0f17; font-family: sans-serif; font-size: 11px; line-height: 1.5; max-width: 240px;">`;
+            if (count > 1) {
+                popupContent += `<strong style="color: #10b981; font-weight: 700;">[!] PROXIMITY CLUSTER (${count} ASSETS)</strong><div style="margin-top: 5px; border-top: 1px solid #e2e8f0; padding-top: 5px; max-height: 120px; overflow-y: auto;">`;
+                group.assets.forEach((asset, idx) => {
+                    popupContent += `<div style="margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><b style="color: #64748b;">#${idx+1}:</b> ${asset.name}</div>`;
+                });
+                popupContent += `</div>`;
+            } else {
+                popupContent += `
+                    <strong style="color: #0ea5e9; font-weight: 700;">[!] NODE TRACKED: ${primaryAsset.name}</strong><br>
+                    <span style="color: #64748b;">TIME:</span> ${primaryAsset.timestamp}<br>
+                    <span style="color: #64748b;">LAT:</span> ${group.lat.toFixed(6)}<br>
+                    <span style="color: #64748b;">LON:</span> ${group.lon.toFixed(6)}
+                `;
+            }
+            popupContent += `</div>`;
+            marker.bindPopup(popupContent);
+
+            marker.on('click', () => {
+                showTargetImagePreview(primaryAsset.localUrl, primaryAsset.name);
+            });
+
+            markerInstancesMap[key] = marker;
+        });
+
+        // Map chronological line tracks across exact positions
         if (trackingLineCoordinates.length > 1) {
             polylineTrack = L.polyline(trackingLineCoordinates, {
                 color: '#38bdf8',
@@ -163,13 +281,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }).addTo(map);
         }
 
-        // Adjust bounding window to encompass all plot layers
         if (trackingLineCoordinates.length > 0) {
             map.fitBounds(markerGroup.getBounds().pad(0.20));
         }
     }
 
-    // Mathematical utility helper: Converts Degree/Minutes/Seconds EXIF object shapes to Decimal Degrees
     function convertDMSToDD(dms, ref) {
         if (!dms) return null;
         let dd = dms[0] + dms[1] / 60 + dms[2] / 3600;
